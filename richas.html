@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Richas - Jogo do Piscar de Olho</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #ffd700, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .character {
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .richas {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .eyes-container {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin: 30px 0;
+        }
+
+        .eye {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .eye:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255,255,255,0.4);
+        }
+
+        .pupil {
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.2s ease;
+        }
+
+        .eye.blinking .pupil {
+            height: 2px;
+            border-radius: 2px;
+        }
+
+        .eye.correct {
+            animation: correctPulse 0.6s ease;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); background: #4caf50; }
+        }
+
+        .eye.wrong {
+            animation: wrongShake 0.6s ease;
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); background: #f44336; }
+            75% { transform: translateX(10px); background: #f44336; }
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .blink-button {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 10px;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .blink-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        .blink-button:active {
+            transform: translateY(0);
+        }
+
+        .phase-indicator {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .victory {
+            background: linear-gradient(45deg, #56ab2f, #a8e6cf);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            animation: victoryGlow 2s infinite alternate;
+        }
+
+        @keyframes victoryGlow {
+            0% { box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4); }
+            100% { box-shadow: 0 8px 25px rgba(86, 171, 47, 0.8); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .target-eye {
+            border: 3px solid #ffd700 !important;
+            animation: targetGlow 1.5s infinite alternate;
+        }
+
+        @keyframes targetGlow {
+            0% { box-shadow: 0 0 10px #ffd700; }
+            100% { box-shadow: 0 0 20px #ffd700; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="title">🎯 Richas</h1>
+        <p class="subtitle">Jogo do Piscar de Olho</p>
+        
+        <div class="richas">
+            <span id="richas-text">Olá! Sou o Richas e preciso da sua ajuda para descobrir qual olho está piscando! 👀</span>
+        </div>
+
+        <div class="phase-indicator">
+            <span id="phase-text">Fase 1: Colete pontos piscando os olhos!</span>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div>Pontos</div>
+                <div class="stat-value" id="points">0</div>
+            </div>
+            <div class="stat">
+                <div>Piscadas</div>
+                <div class="stat-value" id="blinks">0</div>
+            </div>
+            <div class="stat">
+                <div>Acertos</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+        </div>
+
+        <div class="eyes-container">
+            <div class="eye" id="left-eye" onclick="blinkEye('left')">
+                <div class="pupil"></div>
+            </div>
+            <div class="eye" id="right-eye" onclick="blinkEye('right')">
+                <div class="pupil"></div>
+            </div>
+        </div>
+
+        <div id="phase1-content">
+            <div class="instructions">
+                <strong>Instruções:</strong><br>
+                Clique nos olhos para fazê-los piscar e ganhar pontos!<br>
+                Colete <strong>20 pontos</strong> para avançar para a próxima fase.
+            </div>
+            
+            <div>
+                <button class="blink-button" onclick="blinkEye('left')">Piscar Esquerdo</button>
+                <button class="blink-button" onclick="blinkEye('right')">Piscar Direito</button>
+            </div>
+        </div>
+
+        <div id="phase2-content" class="hidden">
+            <div class="instructions">
+                <strong>Fase 2: Ajude o Richas!</strong><br>
+                Agora um olho vai piscar aleatoriamente.<br>
+                Clique no olho que está piscando para ajudar o Richas!
+            </div>
+            
+            <button class="blink-button" onclick="startBlinkSequence()" id="start-sequence">
+                🎲 Começar Sequência
+            </button>
+        </div>
+
+        <div id="victory-content" class="hidden">
+            <div class="victory">
+                <h2>🎉 Parabéns! 🎉</h2>
+                <p>Você ajudou o Richas a descobrir qual olho estava piscando!</p>
+                <p>Pontuação final: <span id="final-score"></span> pontos</p>
+                <button class="blink-button" onclick="resetGame()">🔄 Jogar Novamente</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            points: 0,
+            blinks: 0,
+            correct: 0,
+            phase: 1,
+            targetEye: null,
+            sequenceActive: false
+        };
+
+        const richasMessages = [
+            "Muito bem! Continue piscando! 😊",
+            "Excelente! Você está ajudando muito! 👍",
+            "Ótimo trabalho! Mais alguns pontos! ⭐",
+            "Perfeito! Continue assim! 🎯",
+            "Incrível! Você está mandando bem! 🔥"
+        ];
+
+        const phase2Messages = [
+            "Hmm... será que é este olho? 🤔",
+            "Interessante... preciso descobrir qual é! 🕵️",
+            "Você pode me ajudar a identificar? 🆘",
+            "Estou quase descobrindo o padrão! 🧩",
+            "Com sua ajuda, vou conseguir! 💪"
+        ];
+
+        function updateStats() {
+            document.getElementById('points').textContent = gameState.points;
+            document.getElementById('blinks').textContent = gameState.blinks;
+            document.getElementById('correct').textContent = gameState.correct;
+        }
+
+        function updateRichasMessage(messages) {
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            document.getElementById('richas-text').textContent = randomMessage;
+        }
+
+        function blinkEye(eyePosition) {
+            const eye = document.getElementById(eyePosition + '-eye');
+            
+            if (gameState.phase === 1) {
+                // Fase 1: Ganhar pontos
+                eye.classList.add('blinking');
+                setTimeout(() => eye.classList.remove('blinking'), 200);
+                
+                gameState.points += Math.floor(Math.random() * 3) + 1;
+                gameState.blinks++;
+                
+                updateStats();
+                updateRichasMessage(richasMessages);
+                
+                if (gameState.points >= 20) {
+                    setTimeout(startPhase2, 1000);
+                }
+            } else if (gameState.phase === 2 && gameState.sequenceActive) {
+                // Fase 2: Identificar o olho correto
+                if (eyePosition === gameState.targetEye) {
+                    // Acertou!
+                    eye.classList.add('correct');
+                    gameState.correct++;
+                    gameState.points += 5;
+                    document.getElementById('richas-text').textContent = "Isso mesmo! Você acertou! Eu sabia que era este olho! 🎉";
+                    
+                    setTimeout(() => {
+                        eye.classList.remove('correct', 'target-eye');
+                        if (gameState.correct >= 5) {
+                            endGame();
+                        } else {
+                            gameState.sequenceActive = false;
+                            document.getElementById('start-sequence').style.display = 'inline-block';
+                        }
+                    }, 1000);
+                } else {
+                    // Errou!
+                    eye.classList.add('wrong');
+                    document.getElementById('richas-text').textContent = "Ops! Não era este olho... Tente novamente! 😅";
+                    
+                    setTimeout(() => {
+                        eye.classList.remove('wrong');
+                    }, 600);
+                }
+                
+                updateStats();
+            }
+        }
+
+        function startPhase2() {
+            gameState.phase = 2;
+            document.getElementById('phase1-content').classList.add('hidden');
+            document.getElementById('phase2-content').classList.remove('hidden');
+            document.getElementById('phase-text').textContent = 'Fase 2: Identifique o olho que pisca!';
+            document.getElementById('richas-text').textContent = 'Agora preciso descobrir qual olho está piscando! Me ajude! 🔍';
+        }
+
+        function startBlinkSequence() {
+            gameState.sequenceActive = true;
+            document.getElementById('start-sequence').style.display = 'none';
+            
+            // Escolher olho aleatório
+            gameState.targetEye = Math.random() < 0.5 ? 'left' : 'right';
+            const targetEyeElement = document.getElementById(gameState.targetEye + '-eye');
+            
+            updateRichasMessage(phase2Messages);
+            
+            // Piscar o olho alvo algumas vezes
+            let blinkCount = 0;
+            const blinkInterval = setInterval(() => {
+                targetEyeElement.classList.add('blinking');
+                setTimeout(() => targetEyeElement.classList.remove('blinking'), 300);
+                
+                blinkCount++;
+                if (blinkCount >= 3) {
+                    clearInterval(blinkInterval);
+                    // Destacar o olho para o jogador identificar
+                    setTimeout(() => {
+                        targetEyeElement.classList.add('target-eye');
+                        document.getElementById('richas-text').textContent = 'Este foi o olho que piscou! Clique nele para me ajudar a confirmar! 👆';
+                    }, 500);
+                }
+            }, 800);
+        }
+
+        function endGame() {
+            gameState.phase = 3;
+            document.getElementById('phase2-content').classList.add('hidden');
+            document.getElementById('victory-content').classList.remove('hidden');
+            document.getElementById('final-score').textContent = gameState.points;
+            document.getElementById('phase-text').textContent = '🏆 Missão Cumprida!';
+            
+            // Limpar classes dos olhos
+            document.getElementById('left-eye').className = 'eye';
+            document.getElementById('right-eye').className = 'eye';
+        }
+
+        function resetGame() {
+            gameState = {
+                points: 0,
+                blinks: 0,
+                correct: 0,
+                phase: 1,
+                targetEye: null,
+                sequenceActive: false
+            };
+            
+            document.getElementById('phase1-content').classList.remove('hidden');
+            document.getElementById('phase2-content').classList.add('hidden');
+            document.getElementById('victory-content').classList.add('hidden');
+            document.getElementById('phase-text').textContent = 'Fase 1: Colete pontos piscando os olhos!';
+            document.getElementById('richas-text').textContent = 'Olá! Sou o Richas e preciso da sua ajuda para descobrir qual olho está piscando! 👀';
+            
+            // Limpar classes dos olhos
+            document.getElementById('left-eye').className = 'eye';
+            document.getElementById('right-eye').className = 'eye';
+            
+            updateStats();
+        }
+    </script>
+</body>
+</html>
